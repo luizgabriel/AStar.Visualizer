@@ -1,6 +1,6 @@
 # A* Visualizer
 
-![Preview](https://i.imgur.com/G5BIYOG.png)
+![Preview](https://i.imgur.com/xPQex2p.png)
 
 ## Installation
 
