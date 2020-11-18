@@ -1,4 +1,4 @@
-# Breadth First Search Visualizer
+# A* Visualizer
 
 ![Preview](https://i.imgur.com/G5BIYOG.png)
 

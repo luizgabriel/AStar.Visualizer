@@ -1,6 +1,6 @@
 import {CellData, CellType, createGame} from './GameState';
 import {createCanvas} from './Canvas';
-import {checkPointInsideRect, Point, Rect} from './Geom';
+import {Point, Rect} from './Geom';
 
 const [canvas, graphics] = createCanvas('game-canvas', 1280, 720);
 const {gameState, onClickLeft, onClickRight, startSimulation, stepSimulation, resetSimulation} = createGame(42, 17);
@@ -34,25 +34,24 @@ function onMouseDown(event: MouseEvent) {
     leftMouseDown = event.button === 0;
 }
 
+const topLeftCellRect = calculateCellRect({x: 0, y: 0});
+const topRightCellRect = calculateCellRect({x: gameState.width, y: 0});
+const gridCanvasWidth = topRightCellRect.x - topLeftCellRect.x;
+
+const bottomLeftCellRect = calculateCellRect({x: 0, y: gameState.height});
+const gridCanvasHeight = bottomLeftCellRect.y - topLeftCellRect.y;
+
 function onMouseMove(event: MouseEvent) {
     if (leftMouseDown) {
         onClickLeft(true);
     }
 
-    const mousePoint: Point = {x: event.clientX, y: event.clientY};
+    const mousePoint: Point = {x: event.clientX, y: event.clientY - 120};
+    const gridPoint: Point = {x: Math.floor((mousePoint.x / gridCanvasWidth) * gameState.width), y: Math.floor((mousePoint.y / gridCanvasHeight) * gameState.height)};
 
-    for (let i = 0; i < gameState.width; i++) {
-        for (let j = 0; j < gameState.height; j++) {
-
-            const point: Point = {x: i, y: j};
-            const cell: CellData = gameState.cells[i][j];
-            const cellRect = calculateCellRect(point);
-
-            if (checkPointInsideRect(mousePoint, cellRect)) {
-                gameState.activeCell = {point, cell};
-                return;
-            }
-        }
+    if (gridPoint.x >= 0 && gridPoint.x < gameState.width && gridPoint.y >= 0 && gridPoint.y < gameState.height) {
+        const cell = gameState.cells[gridPoint.x][gridPoint.y];
+        gameState.activeCell = {point: gridPoint, cell};
     }
 }
 
@@ -73,7 +72,7 @@ function renderGame() {
 
     graphics.fillStyle = '#FFFFFF';
     graphics.font = '30px Arial';
-    graphics.fillText('Breadth First Search Visualizer', 0, 50, 400);
+    graphics.fillText('A* Visualizer', 0, 50, 400);
 
     graphics.font = '15px Arial';
     graphics.fillText('Left Click: Draw WALL', 0, 70, 400);
@@ -106,9 +105,13 @@ function renderGame() {
             graphics.fillRect(cellRect.x, cellRect.y, cellRect.width, cellRect.height);
 
             if (cell.type === CellType.EMPTY && cell.visited) {
-                graphics.font = '15px Times New Roman';
+                graphics.font = '12px Times New Roman';
                 graphics.fillStyle = '#15451d';
-                graphics.fillText(cell.distance.toString(), cellRect.x + 5, cellRect.y + 20, 20);
+                graphics.fillText(cell.distance.toString(), cellRect.x + 12, cellRect.y + 10, 20);
+
+                graphics.font = '10px Times New Roman';
+                graphics.fillStyle = '#16482d';
+                graphics.fillText(cell.steps.toString(), cellRect.x + 4, cellRect.y + 25, 20);
             }
         }
     }

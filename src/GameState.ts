@@ -13,7 +13,8 @@ interface PointAndCell {
 
 export interface CellData {
     type: CellType,
-    distance: number,
+    steps: number, //Custo para chegar 
+    distance: number, //Distancia até destino
     visited: boolean,
 }
 
@@ -22,7 +23,6 @@ export interface GameState {
     height: number,
     cells: CellData[][],
     queue: PriorityQueue<PointAndCell>,
-    path: PointAndCell[],
     start?: PointAndCell,
     end?: PointAndCell,
     activeCell?: PointAndCell,
@@ -34,11 +34,11 @@ function createDefaultGameState(widthUnits: number, heightUnits: number): GameSt
         width: widthUnits,
         height: heightUnits,
         running: false,
-        queue: new PriorityQueue([]),
+        queue: new PriorityQueue(),
 
         cells: Array.from(Array(widthUnits), (): CellData[] => {
             return Array.from(Array(heightUnits), (): CellData => {
-                return {type: CellType.EMPTY, distance: 0, visited: false};
+                return {type: CellType.EMPTY, distance: 0, visited: false, steps: 0};
             });
         }),
     }
@@ -138,25 +138,26 @@ function stepSimulation(gameState: GameState) {
     getNeighbors(gameState, current)
         .filter(node => !node.cell.visited)
         .forEach(node => {
-            node.cell.distance = calculateDistance(node.point, gameState.end.point);
+            const distance = calculateDistance(node.point, gameState.end.point);
+
+            node.cell.steps = current.cell.steps + 1;
+            node.cell.distance = distance;
             node.cell.visited = true;
 
-            gameState.queue.enqueue(node, calculateDistance(node.point, gameState.end.point));
+            gameState.queue.enqueue(node, node.cell.steps + distance); // h + g
         });
 }
 
 function resetSimulation(gameState: GameState) {
-    if (gameState.running)
-        return;
-
+    gameState.running = false;
     gameState.queue.clear();
     gameState.start = undefined;
     gameState.end = undefined;
-    gameState.path = [];
 
     for (let i = 0; i < gameState.width; i++) {
         for (let j = 0; j < gameState.height; j++) {
             const cell = gameState.cells[i][j];
+            cell.steps = 0;
             cell.distance = 0;
             cell.visited = false;
         }
